@@ -10,9 +10,20 @@
 #include "state.h"
 #include "input.h"
 
+#define MAX_SQUARES 16
+
 // const of the dims
 const int WIDTH = 800;
 const int HEIGHT = 600;
+
+float rand_range(float min, float max)
+{
+    // Generate a random float between 0 and 1
+    float scale = rand() / (float)RAND_MAX;
+
+    // Scale and shift it to the desired range
+    return min + scale * (max - min);
+}
 
 int main(int argc, char *argv[])
 {
@@ -25,7 +36,11 @@ int main(int argc, char *argv[])
         "Full Screen Shader",
         SDL_WINDOWPOS_CENTERED, SDL_WINDOWPOS_CENTERED,
         WIDTH, HEIGHT,
-        SDL_WINDOW_OPENGL);
+        SDL_WINDOW_OPENGL
+        // uncomment the line below to make the window full screen
+        // | SDL_WINDOW_FULLSCREEN
+        // uncomment the line above to make the window full screen
+    );
 
     SDL_GLContext gl_context = SDL_GL_CreateContext(window);
 
@@ -54,16 +69,53 @@ int main(int argc, char *argv[])
     glVertexAttribPointer(0, 3, GL_FLOAT, GL_FALSE, 3 * sizeof(float), (void *)0);
     glEnableVertexAttribArray(0);
 
+    float squarePositions[MAX_SQUARES * 2];  // x and y for each square
+    float squareVelocities[MAX_SQUARES * 2]; // x and y for each square
+    int numSquares = 5;                      // Start with 5 active squares
+
+    // Initialize positions
+    for (int i = 0; i < MAX_SQUARES * 2; i += 2)
+    {
+        squarePositions[i] = rand_range(0.0f, 1.0f);     // x position
+        squarePositions[i + 1] = rand_range(0.0f, 1.0f); // y position
+    }
+
+    // Initialize velocities
+    float max_vel = 0.01f;
+    for (int i = 0; i < MAX_SQUARES * 2; i += 2)
+    {
+        squareVelocities[i] = rand_range(-max_vel, max_vel);     // x velocity
+        squareVelocities[i + 1] = rand_range(-max_vel, max_vel); // y velocity
+    }
+
     // Main loop
     struct State state = {.quit = false};
     while (!state.quit)
     {
+
         process_input(&state);
 
-        // Clear the screen
-        glClear(GL_COLOR_BUFFER_BIT);
+        // move the squares
+        for (int i = 0; i < numSquares * 2; i += 2)
+        {
+            squarePositions[i] += squareVelocities[i];
+            squarePositions[i + 1] += squareVelocities[i + 1];
+        }
 
-        // Use the shader program
+        // bounds check them
+        for (int i = 0; i < numSquares * 2; i += 2)
+        {
+            if (squarePositions[i] < 0.0f || squarePositions[i] > 1.0f)
+            {
+                squareVelocities[i] *= -1.0f;
+            }
+            if (squarePositions[i + 1] < 0.0f || squarePositions[i + 1] > 1.0f)
+            {
+                squareVelocities[i + 1] *= -1.0f;
+            }
+        }
+
+        glClear(GL_COLOR_BUFFER_BIT);
         glUseProgram(shader_program);
 
         // pass in dims of window
@@ -81,6 +133,14 @@ int main(int argc, char *argv[])
         float mouse_norm_x = (float)x / (float)WIDTH;
         float mouse_norm_y = (float)y / (float)HEIGHT;
         glUniform2f(location, mouse_norm_x, mouse_norm_y);
+
+        // pass in numSquares
+        GLint numSquares_location = glGetUniformLocation(shader_program, "numSquares");
+        glUniform1i(numSquares_location, numSquares);
+
+        // pass in squarePositions
+        GLint squarePositions_location = glGetUniformLocation(shader_program, "squarePositions");
+        glUniform2fv(squarePositions_location, MAX_SQUARES, squarePositions);
 
         // Draw the full-screen quad
         glBindVertexArray(VAO);
