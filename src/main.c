@@ -6,6 +6,7 @@
 #include <stdlib.h>
 #include <unistd.h>
 
+#include "util.h"
 #include "shader_utils.h"
 #include "state.h"
 #include "input.h"
@@ -15,15 +16,6 @@
 // const of the dims
 const int WIDTH = 800;
 const int HEIGHT = 600;
-
-float rand_range(float min, float max)
-{
-    // Generate a random float between 0 and 1
-    float scale = rand() / (float)RAND_MAX;
-
-    // Scale and shift it to the desired range
-    return min + scale * (max - min);
-}
 
 int main(int argc, char *argv[])
 {
