@@ -33,9 +33,9 @@ void main()
     }
     
     // Add mouse interaction
-    // float mouseDist = distance(uv, mouse);
-    // float mouseInfluence = 0.05 / (mouseDist * mouseDist);
-    // color = mix(color, vec3(0.0, 1.0, 1.0), smoothstep(0.0, 1.0, mouseInfluence));
+    float mouseDist = distance(uv, mouse);
+    float mouseInfluence = 0.0001 / (mouseDist * mouseDist);
+    color = mix(color, vec3(0.0, 1.0, 1.0), smoothstep(0.0, 1.0, mouseInfluence));
     
     FragColor = vec4(color, 1.0);
 }

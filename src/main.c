@@ -35,6 +35,8 @@ int main(int argc, char *argv[])
     );
 
     SDL_GLContext gl_context = SDL_GL_CreateContext(window);
+    glViewport(0, 0, WIDTH, HEIGHT);
+    glClearColor(0.1f, 0.1f, 0.1f, 1.0f);
 
     GLuint shader_program = createShaderProgram();
     if (shader_program == 0)
